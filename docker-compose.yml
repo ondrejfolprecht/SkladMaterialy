@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - db-data:/app/data
+    environment:
+      - DATABASE_URL=file:/app/data/sklad.db
+    restart: unless-stopped
+
+volumes:
+  db-data:
