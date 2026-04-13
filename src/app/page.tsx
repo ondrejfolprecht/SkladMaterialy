@@ -67,8 +67,12 @@ export default function Home() {
     });
 
     if (!res.ok) {
-      const body = await res.json();
-      throw new Error(body.errors?.join(", ") || "Chyba při ukládání.");
+      let message = "Chyba při ukládání.";
+      try {
+        const body = await res.json();
+        message = body.errors?.join(", ") || body.error || message;
+      } catch {}
+      throw new Error(message);
     }
 
     setShowForm(false);

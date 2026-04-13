@@ -6,23 +6,32 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const item = await prisma.item.findUnique({
-    where: { id: Number(params.id) },
-  });
+  try {
+    const item = await prisma.item.findUnique({
+      where: { id: Number(params.id) },
+    });
 
-  if (!item) return NextResponse.json({ error: "Nenalezeno" }, { status: 404 });
-  if (item.status === "Ukončeno")
-    return NextResponse.json({ error: "Položka je ukončená" }, { status: 400 });
+    if (!item)
+      return NextResponse.json({ error: "Nenalezeno" }, { status: 404 });
+    if (item.status === "Ukončeno")
+      return NextResponse.json(
+        { error: "Položka je ukončená" },
+        { status: 400 }
+      );
 
-  const updated = await prisma.item.update({
-    where: { id: Number(params.id) },
-    data: {
-      receptionQuantity: item.receptionQuantity + item.marketingQuantity,
-      marketingQuantity: 0,
-      status: "Předáno recepci",
-      reorderFlag: true,
-    },
-  });
+    const updated = await prisma.item.update({
+      where: { id: Number(params.id) },
+      data: {
+        receptionQuantity: item.receptionQuantity + item.marketingQuantity,
+        marketingQuantity: 0,
+        status: "Předáno recepci",
+        reorderFlag: true,
+      },
+    });
 
-  return NextResponse.json(updated);
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("POST /api/items/[id]/transfer error:", error);
+    return NextResponse.json({ error: "Chyba serveru." }, { status: 500 });
+  }
 }

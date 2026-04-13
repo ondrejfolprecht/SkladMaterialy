@@ -3,89 +3,108 @@ import { prisma } from "@/lib/prisma";
 
 // GET /api/items?status=active|archived&search=...&sort=name&order=asc
 export async function GET(req: NextRequest) {
-  const params = req.nextUrl.searchParams;
-  const statusFilter = params.get("status") || "active";
-  const search = params.get("search") || "";
-  const sort = params.get("sort") || "createdAt";
-  const order = params.get("order") || "desc";
+  try {
+    const params = req.nextUrl.searchParams;
+    const statusFilter = params.get("status") || "active";
+    const search = params.get("search") || "";
+    const sort = params.get("sort") || "createdAt";
+    const order = params.get("order") || "desc";
 
-  const allowedSort = [
-    "name",
-    "status",
-    "printOrderedAt",
-    "stockedAt",
-    "createdAt",
-  ];
-  const sortField = allowedSort.includes(sort) ? sort : "createdAt";
-  const sortOrder = order === "asc" ? "asc" : "desc";
+    const allowedSort = [
+      "name",
+      "status",
+      "printOrderedAt",
+      "stockedAt",
+      "createdAt",
+    ];
+    const sortField = allowedSort.includes(sort) ? sort : "createdAt";
+    const sortOrder = order === "asc" ? "asc" : "desc";
 
-  const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = {};
 
-  if (statusFilter === "archived") {
-    where.status = "Ukončeno";
-  } else {
-    where.status = { not: "Ukončeno" };
+    if (statusFilter === "archived") {
+      where.status = "Ukončeno";
+    } else {
+      where.status = { not: "Ukončeno" };
+    }
+
+    if (search) {
+      where.name = { contains: search, mode: "insensitive" };
+    }
+
+    const items = await prisma.item.findMany({
+      where,
+      orderBy: { [sortField]: sortOrder },
+    });
+
+    return NextResponse.json(items);
+  } catch (error) {
+    console.error("GET /api/items error:", error);
+    return NextResponse.json(
+      { error: "Chyba při načítání dat." },
+      { status: 500 }
+    );
   }
-
-  if (search) {
-    where.name = { contains: search };
-  }
-
-  const items = await prisma.item.findMany({
-    where,
-    orderBy: { [sortField]: sortOrder },
-  });
-
-  return NextResponse.json(items);
 }
 
 // POST /api/items
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  const errors: string[] = [];
-  if (!body.name?.trim()) errors.push("Název je povinný.");
-  if (body.orderedQuantity == null || body.orderedQuantity < 0)
-    errors.push("Objednané množství musí být nezáporné číslo.");
-  if (body.receptionQuantity != null && body.receptionQuantity < 0)
-    errors.push("Množství na recepci nesmí být záporné.");
-  if (body.marketingQuantity != null && body.marketingQuantity < 0)
-    errors.push("Množství u marketingu nesmí být záporné.");
-  if (
-    body.productionLeadTimeDays != null &&
-    body.productionLeadTimeDays < 0
-  )
-    errors.push("Výrobní lhůta nesmí být záporná.");
+    const errors: string[] = [];
+    if (!body.name?.trim()) errors.push("Název je povinný.");
+    if (body.orderedQuantity == null || body.orderedQuantity < 0)
+      errors.push("Objednané množství musí být nezáporné číslo.");
+    if (body.receptionQuantity != null && body.receptionQuantity < 0)
+      errors.push("Množství na recepci nesmí být záporné.");
+    if (body.marketingQuantity != null && body.marketingQuantity < 0)
+      errors.push("Množství u marketingu nesmí být záporné.");
+    if (
+      body.productionLeadTimeDays != null &&
+      body.productionLeadTimeDays < 0
+    )
+      errors.push("Výrobní lhůta nesmí být záporná.");
 
-  if (errors.length > 0) {
-    return NextResponse.json({ errors }, { status: 400 });
+    if (errors.length > 0) {
+      return NextResponse.json({ errors }, { status: 400 });
+    }
+
+    // Determine initial status
+    let status = "V tisku";
+    if (
+      body.stockedAt &&
+      (body.receptionQuantity > 0 || body.marketingQuantity > 0)
+    ) {
+      status = "Skladem u marketingu";
+    }
+
+    const item = await prisma.item.create({
+      data: {
+        name: body.name.trim(),
+        category: body.category?.trim() || "",
+        orderedQuantity: Number(body.orderedQuantity),
+        receptionQuantity: Number(body.receptionQuantity || 0),
+        marketingQuantity: Number(body.marketingQuantity || 0),
+        productionLeadTimeDays: body.productionLeadTimeDays
+          ? Number(body.productionLeadTimeDays)
+          : null,
+        printOrderedAt: body.printOrderedAt
+          ? new Date(body.printOrderedAt)
+          : null,
+        stockedAt: body.stockedAt ? new Date(body.stockedAt) : null,
+        status,
+        supplier: body.supplier?.trim() || "",
+        note: body.note?.trim() || "",
+      },
+    });
+
+    return NextResponse.json(item, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/items error:", error);
+    return NextResponse.json(
+      { error: "Chyba při ukládání." },
+      { status: 500 }
+    );
   }
-
-  // Determine initial status
-  let status = "V tisku";
-  if (body.stockedAt && (body.receptionQuantity > 0 || body.marketingQuantity > 0)) {
-    status = "Skladem u marketingu";
-  }
-
-  const item = await prisma.item.create({
-    data: {
-      name: body.name.trim(),
-      category: body.category?.trim() || "",
-      orderedQuantity: Number(body.orderedQuantity),
-      receptionQuantity: Number(body.receptionQuantity || 0),
-      marketingQuantity: Number(body.marketingQuantity || 0),
-      productionLeadTimeDays: body.productionLeadTimeDays
-        ? Number(body.productionLeadTimeDays)
-        : null,
-      printOrderedAt: body.printOrderedAt
-        ? new Date(body.printOrderedAt)
-        : null,
-      stockedAt: body.stockedAt ? new Date(body.stockedAt) : null,
-      status,
-      supplier: body.supplier?.trim() || "",
-      note: body.note?.trim() || "",
-    },
-  });
-
-  return NextResponse.json(item, { status: 201 });
 }
