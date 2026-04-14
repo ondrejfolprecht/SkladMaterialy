@@ -45,8 +45,13 @@ export async function PUT(
     }
 
     let status = body.status;
+    let marketingQty = Number(body.marketingQuantity || 0);
+
     if (body.stockedAt && (body.status === "V tisku" || !body.status)) {
       status = "Skladem u marketingu";
+      if (marketingQty === 0 && body.orderedQuantity > 0) {
+        marketingQty = Number(body.orderedQuantity);
+      }
     }
 
     const item = await prisma.item.update({
@@ -55,7 +60,7 @@ export async function PUT(
         name: body.name.trim(),
         category: body.category?.trim() || "",
         orderedQuantity: Number(body.orderedQuantity),
-        marketingQuantity: Number(body.marketingQuantity || 0),
+        marketingQuantity: marketingQty,
         productionLeadTimeDays: body.productionLeadTimeDays
           ? Number(body.productionLeadTimeDays)
           : null,

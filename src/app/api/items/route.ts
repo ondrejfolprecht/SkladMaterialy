@@ -70,11 +70,14 @@ export async function POST(req: NextRequest) {
     }
 
     let status = "V tisku";
-    if (
-      body.stockedAt &&
-      (body.marketingQuantity > 0 || body.orderedQuantity > 0)
-    ) {
+    let marketingQty = Number(body.marketingQuantity || 0);
+
+    // Když je vyplněné datum naskladnění a marketing je 0, propíše se celé objednané množství
+    if (body.stockedAt && body.orderedQuantity > 0) {
       status = "Skladem u marketingu";
+      if (marketingQty === 0) {
+        marketingQty = Number(body.orderedQuantity);
+      }
     }
 
     const item = await prisma.item.create({
@@ -82,7 +85,7 @@ export async function POST(req: NextRequest) {
         name: body.name.trim(),
         category: body.category?.trim() || "",
         orderedQuantity: Number(body.orderedQuantity),
-        marketingQuantity: Number(body.marketingQuantity || 0),
+        marketingQuantity: marketingQty,
         productionLeadTimeDays: body.productionLeadTimeDays
           ? Number(body.productionLeadTimeDays)
           : null,
