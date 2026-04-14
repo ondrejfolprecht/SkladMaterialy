@@ -133,6 +133,18 @@ export default function Home() {
     fetchItems();
   }
 
+  async function handleDelete(item: Item) {
+    if (
+      !confirm(
+        `Opravdu trvale smazat „${item.name}"? Tato akce je nevratná.`
+      )
+    )
+      return;
+
+    await fetch(`/api/items/${item.id}`, { method: "DELETE" });
+    fetchItems();
+  }
+
   return (
     <main className="max-w-[1600px] mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
@@ -189,6 +201,7 @@ export default function Home() {
             onEdit={openEdit}
             onTransfer={openTransfer}
             onArchive={handleArchive}
+            onDelete={handleDelete}
             sort={sort}
             order={order}
             onSort={handleSort}

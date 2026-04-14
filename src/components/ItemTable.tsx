@@ -8,6 +8,7 @@ interface Props {
   onEdit: (item: Item) => void;
   onTransfer: (item: Item) => void;
   onArchive: (item: Item) => void;
+  onDelete?: (item: Item) => void;
   sort: string;
   order: string;
   onSort: (field: string) => void;
@@ -78,6 +79,7 @@ export default function ItemTable({
   onEdit,
   onTransfer,
   onArchive,
+  onDelete,
   sort,
   order,
   onSort,
@@ -135,7 +137,7 @@ export default function ItemTable({
               .join(" / ");
 
             return (
-              <tr key={item.id} className="hover:bg-gray-50">
+              <tr key={item.id} className="hover:bg-gray-50 h-12">
                 <td className="px-2 py-1.5 font-medium text-sm" title={item.note || undefined}>
                   {item.name}
                   {item.note && (
@@ -205,6 +207,14 @@ export default function ItemTable({
                         Ukončit
                       </button>
                     </>
+                  )}
+                  {isArchive && onDelete && (
+                    <button
+                      onClick={() => onDelete(item)}
+                      className="text-gray-400 hover:text-red-600 hover:underline ml-1.5"
+                    >
+                      Smazat
+                    </button>
                   )}
                 </td>
               </tr>

@@ -76,3 +76,22 @@ export async function PUT(
     return NextResponse.json({ error: "Chyba při ukládání." }, { status: 500 });
   }
 }
+
+// DELETE /api/items/:id
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = Number(params.id);
+
+    // Smazat nejdřív související transfery
+    await prisma.transfer.deleteMany({ where: { itemId: id } });
+    await prisma.item.delete({ where: { id } });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("DELETE /api/items/[id] error:", error);
+    return NextResponse.json({ error: "Chyba při mazání." }, { status: 500 });
+  }
+}
