@@ -17,7 +17,7 @@ interface Props {
 const STATUS_COLORS: Record<string, string> = {
   "V tisku": "bg-yellow-100 text-yellow-800",
   "Skladem u marketingu": "bg-green-100 text-green-800",
-  "Předáno recepci": "bg-blue-100 text-blue-800",
+  "Předáno": "bg-blue-100 text-blue-800",
   Ukončeno: "bg-gray-100 text-gray-500",
 };
 
@@ -27,24 +27,49 @@ function SortHeader({
   sort,
   order,
   onSort,
+  className,
 }: {
   label: string;
   field: string;
   sort: string;
   order: string;
   onSort: (f: string) => void;
+  className?: string;
 }) {
   const active = sort === field;
   return (
     <th
-      className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 whitespace-nowrap"
+      className={`px-2 py-2 text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 whitespace-nowrap ${className || "text-left"}`}
       onClick={() => onSort(field)}
     >
       {label}
       {active && (
-        <span className="ml-1">{order === "asc" ? "▲" : "▼"}</span>
+        <span className="ml-0.5">{order === "asc" ? "▲" : "▼"}</span>
       )}
     </th>
+  );
+}
+
+function TransfersSummary({ item }: { item: Item }) {
+  if (!item.transfers || item.transfers.length === 0) {
+    return <span className="text-gray-300">–</span>;
+  }
+
+  // Group by department
+  const byDept: Record<string, number> = {};
+  for (const t of item.transfers) {
+    byDept[t.department] = (byDept[t.department] || 0) + t.quantity;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+      {Object.entries(byDept).map(([dept, qty]) => (
+        <span key={dept} className="text-xs">
+          <span className="text-gray-500">{dept}:</span>{" "}
+          <span className="font-medium">{qty}</span>
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -70,87 +95,95 @@ export default function ItemTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-xs">
         <thead className="bg-gray-50 border-b">
           <tr>
             <SortHeader label="Název" field="name" sort={sort} order={order} onSort={onSort} />
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kategorie</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Objednáno</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Recepce</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Marketing</th>
+            <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kat.</th>
+            <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase">Obj.</th>
+            <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase">Mktg</th>
+            <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Předáno</th>
             <SortHeader label="Zadáno" field="printOrderedAt" sort={sort} order={order} onSort={onSort} />
-            <SortHeader label="Naskladněno" field="stockedAt" sort={sort} order={order} onSort={onSort} />
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Výr. lhůta</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Skutečná</th>
+            <SortHeader label="Nasklad." field="stockedAt" sort={sort} order={order} onSort={onSort} />
+            <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase" title="Plánovaná / skutečná výrobní lhůta">Lhůta</th>
             <SortHeader label="Stav" field="status" sort={sort} order={order} onSort={onSort} />
-            <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Doobj.</th>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Poznámka</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Akce</th>
+            <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase">Akce</th>
           </tr>
         </thead>
         <tbody className="divide-y">
           {items.map((item) => {
-            const actualLead = calcActualLeadDays(item.printOrderedAt, item.stockedAt);
+            const actualLead = calcActualLeadDays(
+              item.printOrderedAt,
+              item.stockedAt
+            );
+            const transferredTotal = item.transfers?.reduce(
+              (sum, t) => sum + t.quantity,
+              0
+            ) || 0;
             const qtyMismatch =
-              item.receptionQuantity + item.marketingQuantity !==
+              transferredTotal + item.marketingQuantity !==
               item.orderedQuantity;
+
+            const leadDisplay = [
+              item.productionLeadTimeDays != null
+                ? `${item.productionLeadTimeDays}d`
+                : null,
+              actualLead != null ? `${actualLead}d` : null,
+            ]
+              .filter(Boolean)
+              .join(" / ");
 
             return (
               <tr key={item.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2 font-medium">{item.name}</td>
-                <td className="px-3 py-2 text-gray-600">{item.category}</td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-2 py-1.5 font-medium text-sm" title={item.note || undefined}>
+                  {item.name}
+                  {item.note && (
+                    <span className="text-gray-300 ml-1" title={item.note}>*</span>
+                  )}
+                </td>
+                <td className="px-2 py-1.5 text-gray-500">{item.category || "–"}</td>
+                <td className="px-2 py-1.5 text-right">
                   {item.orderedQuantity.toLocaleString("cs-CZ")}
+                  {qtyMismatch && item.orderedQuantity > 0 && (
+                    <span
+                      className="text-amber-500 ml-0.5"
+                      title={`Předáno (${transferredTotal}) + marketing (${item.marketingQuantity}) ≠ objednáno (${item.orderedQuantity})`}
+                    >
+                      ⚠
+                    </span>
+                  )}
                 </td>
-                <td className="px-3 py-2 text-right">
-                  {item.receptionQuantity.toLocaleString("cs-CZ")}
-                </td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-2 py-1.5 text-right">
                   {item.marketingQuantity.toLocaleString("cs-CZ")}
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap">
+                <td className="px-2 py-1.5">
+                  <TransfersSummary item={item} />
+                </td>
+                <td className="px-2 py-1.5 whitespace-nowrap">
                   {formatDate(item.printOrderedAt)}
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap">
+                <td className="px-2 py-1.5 whitespace-nowrap">
                   {formatDate(item.stockedAt)}
                 </td>
-                <td className="px-3 py-2 text-right">
-                  {item.productionLeadTimeDays ?? "–"}
+                <td className="px-2 py-1.5 text-right whitespace-nowrap text-gray-500">
+                  {leadDisplay || "–"}
                 </td>
-                <td className="px-3 py-2 text-right">
-                  {actualLead !== null ? `${actualLead} d` : "–"}
-                </td>
-                <td className="px-3 py-2">
+                <td className="px-2 py-1.5">
                   <span
-                    className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                    className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
                       STATUS_COLORS[item.status] || "bg-gray-100"
                     }`}
                   >
                     {item.status}
                   </span>
-                </td>
-                <td className="px-3 py-2 text-center">
-                  {item.reorderFlag ? (
-                    <span className="text-red-500 font-bold" title="Nutno doobjednat">!</span>
-                  ) : (
-                    "–"
+                  {item.reorderFlag && (
+                    <span className="text-red-500 font-bold ml-1" title="Nutno doobjednat">!</span>
                   )}
                 </td>
-                <td className="px-3 py-2 text-gray-500 max-w-[200px] truncate" title={item.note}>
-                  {item.note || "–"}
-                </td>
-                <td className="px-3 py-2 text-right whitespace-nowrap">
-                  {qtyMismatch && (
-                    <span
-                      className="text-amber-500 mr-2"
-                      title={`Recepce + marketing ≠ objednáno`}
-                    >
-                      ⚠
-                    </span>
-                  )}
+                <td className="px-2 py-1.5 text-right whitespace-nowrap">
                   <button
                     onClick={() => onEdit(item)}
-                    className="text-blue-600 hover:underline text-xs mr-2"
+                    className="text-blue-600 hover:underline mr-1.5"
                   >
                     Upravit
                   </button>
@@ -159,15 +192,14 @@ export default function ItemTable({
                       {item.marketingQuantity > 0 && (
                         <button
                           onClick={() => onTransfer(item)}
-                          className="text-green-600 hover:underline text-xs mr-2"
-                          title="Převést zásobu marketingu na recepci"
+                          className="text-green-600 hover:underline mr-1.5"
                         >
                           Předat
                         </button>
                       )}
                       <button
                         onClick={() => onArchive(item)}
-                        className="text-gray-400 hover:text-red-500 hover:underline text-xs"
+                        className="text-gray-400 hover:text-red-500 hover:underline"
                       >
                         Ukončit
                       </button>

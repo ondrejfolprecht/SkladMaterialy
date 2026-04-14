@@ -8,21 +8,32 @@ datasource db {
 }
 
 model Item {
-  id                      Int       @id @default(autoincrement())
+  id                      Int        @id @default(autoincrement())
   name                    String
-  category                String    @default("")
-  orderedQuantity         Int       @map("ordered_quantity")
-  receptionQuantity       Int       @default(0) @map("reception_quantity")
-  marketingQuantity       Int       @default(0) @map("marketing_quantity")
-  productionLeadTimeDays  Int?      @map("production_lead_time_days")
-  printOrderedAt          DateTime? @map("print_ordered_at")
-  stockedAt               DateTime? @map("stocked_at")
-  status                  String    @default("V tisku")
-  reorderFlag             Boolean   @default(false) @map("reorder_flag")
-  supplier                String    @default("")
-  note                    String    @default("")
-  createdAt               DateTime  @default(now()) @map("created_at")
-  updatedAt               DateTime  @updatedAt @map("updated_at")
+  category                String     @default("")
+  orderedQuantity         Int        @map("ordered_quantity")
+  marketingQuantity       Int        @default(0) @map("marketing_quantity")
+  productionLeadTimeDays  Int?       @map("production_lead_time_days")
+  printOrderedAt          DateTime?  @map("print_ordered_at")
+  stockedAt               DateTime?  @map("stocked_at")
+  status                  String     @default("V tisku")
+  reorderFlag             Boolean    @default(false) @map("reorder_flag")
+  supplier                String     @default("")
+  note                    String     @default("")
+  createdAt               DateTime   @default(now()) @map("created_at")
+  updatedAt               DateTime   @updatedAt @map("updated_at")
+  transfers               Transfer[]
 
   @@map("items")
+}
+
+model Transfer {
+  id            Int      @id @default(autoincrement())
+  itemId        Int      @map("item_id")
+  department    String
+  quantity      Int
+  transferredAt DateTime @default(now()) @map("transferred_at")
+  item          Item     @relation(fields: [itemId], references: [id])
+
+  @@map("transfers")
 }

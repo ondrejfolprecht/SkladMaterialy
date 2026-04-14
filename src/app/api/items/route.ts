@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
 
     const items = await prisma.item.findMany({
       where,
+      include: { transfers: { orderBy: { transferredAt: "desc" } } },
       orderBy: { [sortField]: sortOrder },
     });
 
@@ -56,8 +57,6 @@ export async function POST(req: NextRequest) {
     if (!body.name?.trim()) errors.push("Název je povinný.");
     if (body.orderedQuantity == null || body.orderedQuantity < 0)
       errors.push("Objednané množství musí být nezáporné číslo.");
-    if (body.receptionQuantity != null && body.receptionQuantity < 0)
-      errors.push("Množství na recepci nesmí být záporné.");
     if (body.marketingQuantity != null && body.marketingQuantity < 0)
       errors.push("Množství u marketingu nesmí být záporné.");
     if (
@@ -70,11 +69,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ errors }, { status: 400 });
     }
 
-    // Determine initial status
     let status = "V tisku";
     if (
       body.stockedAt &&
-      (body.receptionQuantity > 0 || body.marketingQuantity > 0)
+      (body.marketingQuantity > 0 || body.orderedQuantity > 0)
     ) {
       status = "Skladem u marketingu";
     }
@@ -84,7 +82,6 @@ export async function POST(req: NextRequest) {
         name: body.name.trim(),
         category: body.category?.trim() || "",
         orderedQuantity: Number(body.orderedQuantity),
-        receptionQuantity: Number(body.receptionQuantity || 0),
         marketingQuantity: Number(body.marketingQuantity || 0),
         productionLeadTimeDays: body.productionLeadTimeDays
           ? Number(body.productionLeadTimeDays)
@@ -97,6 +94,7 @@ export async function POST(req: NextRequest) {
         supplier: body.supplier?.trim() || "",
         note: body.note?.trim() || "",
       },
+      include: { transfers: true },
     });
 
     return NextResponse.json(item, { status: 201 });

@@ -8,7 +8,6 @@ describe("formatDate", () => {
 
   it("formats a valid date in cs-CZ locale", () => {
     const result = formatDate("2026-03-20T00:00:00.000Z");
-    // cs-CZ format: d. m. yyyy
     expect(result).toMatch(/20/);
     expect(result).toMatch(/3/);
     expect(result).toMatch(/2026/);
@@ -47,50 +46,49 @@ describe("toInputDate", () => {
   });
 });
 
-describe("business logic: quantity mismatch", () => {
-  it("detects when reception + marketing !== ordered", () => {
+describe("business logic: transfer to department", () => {
+  it("decrements marketing quantity by transfer amount", () => {
+    const marketingQty = 200;
+    const transferQty = 80;
+    const newMarketingQty = marketingQty - transferQty;
+    expect(newMarketingQty).toBe(120);
+  });
+
+  it("sets reorder flag when marketing reaches 0", () => {
+    const marketingQty = 200;
+    const transferQty = 200;
+    const newMarketingQty = marketingQty - transferQty;
+    const reorderFlag = newMarketingQty === 0;
+    expect(newMarketingQty).toBe(0);
+    expect(reorderFlag).toBe(true);
+  });
+
+  it("does not allow transfer exceeding marketing quantity", () => {
+    const marketingQty = 100;
+    const transferQty = 150;
+    expect(transferQty > marketingQty).toBe(true);
+  });
+});
+
+describe("business logic: quantity mismatch with transfers", () => {
+  it("detects when transfers + marketing !== ordered", () => {
     const ordered = 1000;
-    const reception = 600;
+    const transferredTotal = 600;
     const marketing = 200;
-    expect(reception + marketing !== ordered).toBe(true);
+    expect(transferredTotal + marketing !== ordered).toBe(true);
   });
 
   it("is ok when quantities match", () => {
     const ordered = 1000;
-    const reception = 800;
+    const transferredTotal = 800;
     const marketing = 200;
-    expect(reception + marketing === ordered).toBe(true);
-  });
-});
-
-describe("business logic: transfer to reception", () => {
-  it("moves marketing quantity to reception and sets reorder flag", () => {
-    const item = {
-      receptionQuantity: 800,
-      marketingQuantity: 200,
-      status: "Skladem u marketingu",
-      reorderFlag: false,
-    };
-
-    // Simulate transfer action
-    const updated = {
-      receptionQuantity: item.receptionQuantity + item.marketingQuantity,
-      marketingQuantity: 0,
-      status: "Předáno recepci",
-      reorderFlag: true,
-    };
-
-    expect(updated.receptionQuantity).toBe(1000);
-    expect(updated.marketingQuantity).toBe(0);
-    expect(updated.status).toBe("Předáno recepci");
-    expect(updated.reorderFlag).toBe(true);
+    expect(transferredTotal + marketing === ordered).toBe(true);
   });
 });
 
 describe("business logic: status transitions", () => {
   it("new item defaults to 'V tisku'", () => {
-    const status = "V tisku";
-    expect(status).toBe("V tisku");
+    expect("V tisku").toBe("V tisku");
   });
 
   it("changes to 'Skladem u marketingu' when stockedAt is set", () => {
@@ -101,19 +99,12 @@ describe("business logic: status transitions", () => {
     if (stockedAt && currentStatus === "V tisku") {
       newStatus = "Skladem u marketingu";
     }
-
     expect(newStatus).toBe("Skladem u marketingu");
   });
 
-  it("does not change status if already past 'V tisku'", () => {
-    const currentStatus = "Předáno recepci";
-    const stockedAt = "2026-03-28";
-
-    let newStatus = currentStatus;
-    if (stockedAt && currentStatus === "V tisku") {
-      newStatus = "Skladem u marketingu";
-    }
-
-    expect(newStatus).toBe("Předáno recepci");
+  it("changes to 'Předáno' when marketing reaches 0", () => {
+    const newMarketingQty = 0;
+    const status = newMarketingQty === 0 ? "Předáno" : "Skladem u marketingu";
+    expect(status).toBe("Předáno");
   });
 });

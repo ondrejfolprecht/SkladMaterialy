@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Item, ItemFormData } from "@/lib/types";
 import ItemTable from "@/components/ItemTable";
 import ItemForm from "@/components/ItemForm";
+import TransferDialog from "@/components/TransferDialog";
 
 export default function Home() {
   const [items, setItems] = useState<Item[]>([]);
@@ -17,23 +18,42 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
+  // Transfer dialog state
+  const [transferItem, setTransferItem] = useState<Item | null>(null);
+
   const fetchItems = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({
-      status: tab === "archived" ? "archived" : "active",
-      search,
-      sort,
-      order,
-    });
-    const res = await fetch(`/api/items?${params}`);
-    const data = await res.json();
-    setItems(data);
-    setLoading(false);
+    try {
+      const params = new URLSearchParams({
+        status: tab === "archived" ? "archived" : "active",
+        search,
+        sort,
+        order,
+      });
+      const res = await fetch(`/api/items?${params}`);
+      const data = await res.json();
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   }, [tab, search, sort, order]);
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  // Collect unique department names for suggestions
+  const knownDepartments = useMemo(() => {
+    const depts = new Set<string>();
+    for (const item of items) {
+      for (const t of item.transfers || []) {
+        depts.add(t.department);
+      }
+    }
+    return Array.from(depts).sort();
+  }, [items]);
 
   function handleSort(field: string) {
     if (sort === field) {
@@ -80,15 +100,29 @@ export default function Home() {
     fetchItems();
   }
 
-  async function handleTransfer(item: Item) {
-    if (
-      !confirm(
-        `Převést zásobu marketingu (${item.marketingQuantity} ks) na recepci?`
-      )
-    )
-      return;
+  function openTransfer(item: Item) {
+    setTransferItem(item);
+  }
 
-    await fetch(`/api/items/${item.id}/transfer`, { method: "POST" });
+  async function handleTransfer(department: string, quantity: number) {
+    if (!transferItem) return;
+
+    const res = await fetch(`/api/items/${transferItem.id}/transfer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ department, quantity }),
+    });
+
+    if (!res.ok) {
+      let message = "Chyba při předávání.";
+      try {
+        const body = await res.json();
+        message = body.errors?.join(", ") || body.error || message;
+      } catch {}
+      throw new Error(message);
+    }
+
+    setTransferItem(null);
     fetchItems();
   }
 
@@ -100,7 +134,7 @@ export default function Home() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-6">
+    <main className="max-w-[1600px] mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold">Sklad tiskovin</h1>
         <button
@@ -153,7 +187,7 @@ export default function Home() {
           <ItemTable
             items={items}
             onEdit={openEdit}
-            onTransfer={handleTransfer}
+            onTransfer={openTransfer}
             onArchive={handleArchive}
             sort={sort}
             order={order}
@@ -172,6 +206,16 @@ export default function Home() {
             setShowForm(false);
             setEditingItem(null);
           }}
+        />
+      )}
+
+      {/* Transfer dialog */}
+      {transferItem && (
+        <TransferDialog
+          item={transferItem}
+          departments={knownDepartments}
+          onConfirm={handleTransfer}
+          onCancel={() => setTransferItem(null)}
         />
       )}
     </main>

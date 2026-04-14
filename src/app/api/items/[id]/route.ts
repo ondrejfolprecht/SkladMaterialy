@@ -9,6 +9,7 @@ export async function GET(
   try {
     const item = await prisma.item.findUnique({
       where: { id: Number(params.id) },
+      include: { transfers: { orderBy: { transferredAt: "desc" } } },
     });
     if (!item)
       return NextResponse.json({ error: "Nenalezeno" }, { status: 404 });
@@ -31,8 +32,6 @@ export async function PUT(
     if (!body.name?.trim()) errors.push("Název je povinný.");
     if (body.orderedQuantity == null || body.orderedQuantity < 0)
       errors.push("Objednané množství musí být nezáporné číslo.");
-    if (body.receptionQuantity != null && body.receptionQuantity < 0)
-      errors.push("Množství na recepci nesmí být záporné.");
     if (body.marketingQuantity != null && body.marketingQuantity < 0)
       errors.push("Množství u marketingu nesmí být záporné.");
     if (
@@ -45,7 +44,6 @@ export async function PUT(
       return NextResponse.json({ errors }, { status: 400 });
     }
 
-    // Auto-set status when stockedAt is filled
     let status = body.status;
     if (body.stockedAt && (body.status === "V tisku" || !body.status)) {
       status = "Skladem u marketingu";
@@ -57,7 +55,6 @@ export async function PUT(
         name: body.name.trim(),
         category: body.category?.trim() || "",
         orderedQuantity: Number(body.orderedQuantity),
-        receptionQuantity: Number(body.receptionQuantity || 0),
         marketingQuantity: Number(body.marketingQuantity || 0),
         productionLeadTimeDays: body.productionLeadTimeDays
           ? Number(body.productionLeadTimeDays)
@@ -70,6 +67,7 @@ export async function PUT(
         supplier: body.supplier?.trim() || "",
         note: body.note?.trim() || "",
       },
+      include: { transfers: true },
     });
 
     return NextResponse.json(item);

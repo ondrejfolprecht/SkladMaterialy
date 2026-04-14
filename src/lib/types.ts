@@ -1,9 +1,16 @@
+export interface Transfer {
+  id: number;
+  itemId: number;
+  department: string;
+  quantity: number;
+  transferredAt: string;
+}
+
 export interface Item {
   id: number;
   name: string;
   category: string;
   orderedQuantity: number;
-  receptionQuantity: number;
   marketingQuantity: number;
   productionLeadTimeDays: number | null;
   printOrderedAt: string | null;
@@ -14,13 +21,13 @@ export interface Item {
   note: string;
   createdAt: string;
   updatedAt: string;
+  transfers: Transfer[];
 }
 
 export type ItemFormData = {
   name: string;
   category: string;
   orderedQuantity: number;
-  receptionQuantity: number;
   marketingQuantity: number;
   productionLeadTimeDays: number | null;
   printOrderedAt: string;
@@ -30,9 +37,14 @@ export type ItemFormData = {
   status?: string;
 };
 
+export type TransferFormData = {
+  department: string;
+  quantity: number;
+};
+
 export const STATUSES = [
   "V tisku",
   "Skladem u marketingu",
-  "Předáno recepci",
+  "Předáno",
   "Ukončeno",
 ] as const;

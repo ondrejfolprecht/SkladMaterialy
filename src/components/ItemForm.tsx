@@ -15,7 +15,6 @@ export default function ItemForm({ item, onSave, onCancel }: Props) {
     name: "",
     category: "",
     orderedQuantity: 0,
-    receptionQuantity: 0,
     marketingQuantity: 0,
     productionLeadTimeDays: null,
     printOrderedAt: "",
@@ -33,7 +32,6 @@ export default function ItemForm({ item, onSave, onCancel }: Props) {
         name: item.name,
         category: item.category,
         orderedQuantity: item.orderedQuantity,
-        receptionQuantity: item.receptionQuantity,
         marketingQuantity: item.marketingQuantity,
         productionLeadTimeDays: item.productionLeadTimeDays,
         printOrderedAt: toInputDate(item.printOrderedAt),
@@ -46,8 +44,9 @@ export default function ItemForm({ item, onSave, onCancel }: Props) {
   }, [item]);
 
   const actualLead = calcActualLeadDays(form.printOrderedAt, form.stockedAt);
-  const qtyMismatch =
-    form.receptionQuantity + form.marketingQuantity !== form.orderedQuantity;
+
+  const transferredTotal =
+    item?.transfers?.reduce((sum, t) => sum + t.quantity, 0) || 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,8 +56,6 @@ export default function ItemForm({ item, onSave, onCancel }: Props) {
     if (!form.name.trim()) errs.push("Název je povinný.");
     if (form.orderedQuantity < 0)
       errs.push("Objednané množství nesmí být záporné.");
-    if (form.receptionQuantity < 0)
-      errs.push("Množství na recepci nesmí být záporné.");
     if (form.marketingQuantity < 0)
       errs.push("Množství u marketingu nesmí být záporné.");
 
@@ -166,21 +163,6 @@ export default function ItemForm({ item, onSave, onCancel }: Props) {
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              Na recepci (ks)
-            </label>
-            <input
-              type="number"
-              min={0}
-              value={form.receptionQuantity}
-              onChange={(e) =>
-                set("receptionQuantity", Number(e.target.value))
-              }
-              className="w-full border rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
               U marketingu (ks)
             </label>
             <input
@@ -194,11 +176,11 @@ export default function ItemForm({ item, onSave, onCancel }: Props) {
             />
           </div>
 
-          {qtyMismatch && form.orderedQuantity > 0 && (
-            <div className="col-span-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded p-2">
-              Recepce ({form.receptionQuantity}) + marketing (
-              {form.marketingQuantity}) = {form.receptionQuantity + form.marketingQuantity}
-              {" "}≠ objednáno ({form.orderedQuantity})
+          {item && transferredTotal > 0 && (
+            <div className="flex items-end pb-2">
+              <span className="text-sm text-gray-500">
+                Předáno celkem: {transferredTotal} ks
+              </span>
             </div>
           )}
 
