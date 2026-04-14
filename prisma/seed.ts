@@ -3,13 +3,15 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Katalog A4 – skladem u marketingu
-  const katalog = await prisma.item.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
+  // Vyčistit vše
+  await prisma.transfer.deleteMany();
+  await prisma.item.deleteMany();
+
+  // Katalog A4 – skladem u marketingu, částečně předáno
+  const katalog = await prisma.item.create({
+    data: {
       name: "Katalog A4",
-      category: "Katalogy",
+      category: "Katalog",
       orderedQuantity: 1000,
       marketingQuantity: 200,
       productionLeadTimeDays: 10,
@@ -21,36 +23,28 @@ async function main() {
     },
   });
 
-  // Transfer for Katalog A4
-  const existingTransfer = await prisma.transfer.findFirst({
-    where: { itemId: katalog.id },
-  });
-  if (!existingTransfer) {
-    await prisma.transfer.create({
-      data: {
+  await prisma.transfer.createMany({
+    data: [
+      {
         itemId: katalog.id,
         department: "Recepce",
         quantity: 500,
         transferredAt: new Date("2026-03-29"),
       },
-    });
-    await prisma.transfer.create({
-      data: {
+      {
         itemId: katalog.id,
         department: "Klientský servis",
         quantity: 300,
         transferredAt: new Date("2026-04-02"),
       },
-    });
-  }
+    ],
+  });
 
   // Brožura produktů – v tisku
-  await prisma.item.upsert({
-    where: { id: 2 },
-    update: {},
-    create: {
+  await prisma.item.create({
+    data: {
       name: "Brožura produktů",
-      category: "Brožury",
+      category: "Brožura",
       orderedQuantity: 500,
       marketingQuantity: 0,
       productionLeadTimeDays: 14,
@@ -62,39 +56,7 @@ async function main() {
     },
   });
 
-  // Vizitky recepce – ukončeno
-  const vizitky = await prisma.item.upsert({
-    where: { id: 3 },
-    update: {},
-    create: {
-      name: "Vizitky recepce",
-      category: "Vizitky",
-      orderedQuantity: 200,
-      marketingQuantity: 0,
-      productionLeadTimeDays: 5,
-      printOrderedAt: new Date("2026-01-10"),
-      stockedAt: new Date("2026-01-14"),
-      status: "Ukončeno",
-      supplier: "Tiskárna Havel",
-      note: "Starý design, nahrazeno novou verzí",
-    },
-  });
-
-  const existingVizitkyTransfer = await prisma.transfer.findFirst({
-    where: { itemId: vizitky.id },
-  });
-  if (!existingVizitkyTransfer) {
-    await prisma.transfer.create({
-      data: {
-        itemId: vizitky.id,
-        department: "Recepce",
-        quantity: 200,
-        transferredAt: new Date("2026-01-15"),
-      },
-    });
-  }
-
-  console.log("Seed data created.");
+  console.log("Seed data created (clean).");
 }
 
 main()
