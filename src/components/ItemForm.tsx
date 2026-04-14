@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Item, ItemFormData, STATUSES } from "@/lib/types";
+import { Item, ItemFormData, CATEGORIES, STATUSES } from "@/lib/types";
 import { calcActualLeadDays, toInputDate } from "@/lib/helpers";
 
 interface Props {
@@ -112,12 +112,18 @@ export default function ItemForm({ item, onSave, onCancel }: Props) {
 
           <div>
             <label className="block text-sm font-medium mb-1">Kategorie</label>
-            <input
-              type="text"
+            <select
               value={form.category}
               onChange={(e) => set("category", e.target.value)}
               className="w-full border rounded px-3 py-2 text-sm"
-            />
+            >
+              <option value="">— vyberte —</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

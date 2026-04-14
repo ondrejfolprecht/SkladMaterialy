@@ -42,6 +42,15 @@ export type TransferFormData = {
   quantity: number;
 };
 
+export const CATEGORIES = [
+  "Brožura",
+  "Leták",
+  "Vizitka",
+  "Katalog",
+  "Poučení",
+  "Ostatní",
+] as const;
+
 export const STATUSES = [
   "V tisku",
   "Skladem u marketingu",
