@@ -7,7 +7,7 @@ interface Props {
   items: Item[];
   onEdit: (item: Item) => void;
   onTransfer: (item: Item) => void;
-  onArchive: (item: Item) => void;
+  onStock: (item: Item) => void;
   onDelete?: (item: Item) => void;
   sort: string;
   order: string;
@@ -78,7 +78,7 @@ export default function ItemTable({
   items,
   onEdit,
   onTransfer,
-  onArchive,
+  onStock,
   onDelete,
   sort,
   order,
@@ -190,28 +190,26 @@ export default function ItemTable({
                   >
                     Upravit
                   </button>
-                  {!isArchive && item.status !== "Ukončeno" && (
-                    <>
-                      {item.marketingQuantity > 0 && (
-                        <button
-                          onClick={() => onTransfer(item)}
-                          className="text-green-600 hover:underline mr-1.5"
-                        >
-                          Předat
-                        </button>
-                      )}
-                      <button
-                        onClick={() => onArchive(item)}
-                        className="text-gray-400 hover:text-red-500 hover:underline"
-                      >
-                        Ukončit
-                      </button>
-                    </>
+                  {!isArchive && item.status === "V tisku" && (
+                    <button
+                      onClick={() => onStock(item)}
+                      className="text-purple-600 hover:underline mr-1.5"
+                    >
+                      Naskladnit
+                    </button>
+                  )}
+                  {!isArchive && item.marketingQuantity > 0 && item.status !== "V tisku" && (
+                    <button
+                      onClick={() => onTransfer(item)}
+                      className="text-green-600 hover:underline mr-1.5"
+                    >
+                      Předat
+                    </button>
                   )}
                   {isArchive && onDelete && (
                     <button
                       onClick={() => onDelete(item)}
-                      className="text-gray-400 hover:text-red-600 hover:underline ml-1.5"
+                      className="text-red-400 hover:text-red-600 hover:underline ml-1.5"
                     >
                       Smazat
                     </button>

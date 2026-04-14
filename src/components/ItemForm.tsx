@@ -8,9 +8,10 @@ interface Props {
   item?: Item | null;
   onSave: (data: ItemFormData) => Promise<void>;
   onCancel: () => void;
+  onArchive?: (item: Item) => void;
 }
 
-export default function ItemForm({ item, onSave, onCancel }: Props) {
+export default function ItemForm({ item, onSave, onCancel, onArchive }: Props) {
   const [form, setForm] = useState<ItemFormData>({
     name: "",
     category: "",
@@ -248,21 +249,38 @@ export default function ItemForm({ item, onSave, onCancel }: Props) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
-          >
-            Zrušit
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            {saving ? "Ukládám…" : "Uložit"}
-          </button>
+        <div className="flex justify-between mt-6">
+          <div>
+            {item && onArchive && item.status !== "Ukončeno" && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm(`Ukončit položku „${item.name}"?`)) {
+                    onArchive(item);
+                  }
+                }}
+                className="px-4 py-2 text-sm text-red-500 border border-red-200 rounded hover:bg-red-50"
+              >
+                Ukončit položku
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+            >
+              Zrušit
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Ukládám…" : "Uložit"}
+            </button>
+          </div>
         </div>
       </form>
     </div>

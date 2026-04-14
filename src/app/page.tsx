@@ -126,10 +126,15 @@ export default function Home() {
     fetchItems();
   }
 
-  async function handleArchive(item: Item) {
-    if (!confirm(`Ukončit položku „${item.name}"?`)) return;
+  async function handleStock(item: Item) {
+    if (
+      !confirm(
+        `Naskladnit „${item.name}" — ${item.orderedQuantity} ks do skladu marketingu?`
+      )
+    )
+      return;
 
-    await fetch(`/api/items/${item.id}/archive`, { method: "POST" });
+    await fetch(`/api/items/${item.id}/stock`, { method: "POST" });
     fetchItems();
   }
 
@@ -200,7 +205,7 @@ export default function Home() {
             items={items}
             onEdit={openEdit}
             onTransfer={openTransfer}
-            onArchive={handleArchive}
+            onStock={handleStock}
             onDelete={handleDelete}
             sort={sort}
             order={order}
@@ -218,6 +223,12 @@ export default function Home() {
           onCancel={() => {
             setShowForm(false);
             setEditingItem(null);
+          }}
+          onArchive={async (item) => {
+            await fetch(`/api/items/${item.id}/archive`, { method: "POST" });
+            setShowForm(false);
+            setEditingItem(null);
+            fetchItems();
           }}
         />
       )}

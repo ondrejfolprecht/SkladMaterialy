@@ -3,6 +3,7 @@ import "./globals.css";
 export const metadata = {
   title: "Sklad tiskovin",
   description: "Interní evidence tiskových materiálů",
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({
