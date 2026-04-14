@@ -121,8 +121,9 @@ export default function ItemTable({
               0
             ) || 0;
             const qtyMismatch =
+              item.stockedAt &&
               transferredTotal + item.marketingQuantity !==
-              item.orderedQuantity;
+                item.orderedQuantity;
 
             const leadDisplay = [
               item.productionLeadTimeDays != null
@@ -211,6 +212,11 @@ export default function ItemTable({
           })}
         </tbody>
       </table>
+      <div className="flex gap-4 px-3 py-2 text-[11px] text-gray-400 border-t">
+        <span><span className="text-amber-500">⚠</span> Nesoulad množství (předáno + marketing ≠ objednáno)</span>
+        <span><span className="text-red-500 font-bold">!</span> Nutno doobjednat</span>
+        <span><span className="text-gray-300">*</span> Položka má poznámku (najeďte myší)</span>
+      </div>
     </div>
   );
 }
