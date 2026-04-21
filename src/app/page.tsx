@@ -130,6 +130,12 @@ export default function Home() {
     fetchMaterials();
   }
 
+  async function handleUnarchive(material: Material) {
+    if (!confirm(`Vrátit materiál „${material.name}" zpět mezi aktivní?`)) return;
+    await fetch(`/api/materials/${material.id}/unarchive`, { method: "POST" });
+    fetchMaterials();
+  }
+
   return (
     <main className="max-w-[1600px] mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
@@ -144,12 +150,22 @@ export default function Home() {
 
       {/* Dashboard strip */}
       {tab === "active" && (
-        <div className="flex gap-4 mb-4 text-sm">
-          <span>🔴 {alertCounts.red} kritické</span>
-          <span className="text-gray-300">|</span>
-          <span>🟡 {alertCounts.yellow} brzy objednat</span>
-          <span className="text-gray-300">|</span>
-          <span>🟢 {alertCounts.green} v pořádku</span>
+        <div className="flex gap-2 mb-4 text-xs">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 border border-red-100 text-red-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+            <span className="font-semibold">{alertCounts.red}</span>
+            <span className="text-red-600/80">kritické</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-100 text-amber-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+            <span className="font-semibold">{alertCounts.yellow}</span>
+            <span className="text-amber-600/80">brzy objednat</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-50 border border-gray-100 text-gray-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span className="font-semibold">{alertCounts.green}</span>
+            <span className="text-gray-500">v pořádku</span>
+          </span>
         </div>
       )}
 
@@ -197,6 +213,7 @@ export default function Home() {
             onNavigate={(id) => router.push(`/material/${id}`)}
             onTransfer={(mat) => setTransferMaterial(mat)}
             onOrder={(mat) => setOrderMaterial(mat)}
+            onUnarchive={handleUnarchive}
             isArchive={tab === "archived"}
           />
         )}

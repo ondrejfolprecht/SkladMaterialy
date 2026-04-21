@@ -77,6 +77,12 @@ export default function MaterialDetailPage() {
     fetchMaterial();
   }
 
+  async function handleUnarchive() {
+    if (!confirm("Vrátit materiál zpět mezi aktivní?")) return;
+    await fetch(`/api/materials/${id}/unarchive`, { method: "POST" });
+    fetchMaterial();
+  }
+
   async function handleDelete() {
     if (!confirm("Opravdu trvale smazat tento materiál? Tato akce je nevratná."))
       return;
@@ -186,12 +192,20 @@ export default function MaterialDetailPage() {
               Upravit
             </button>
             {material.status === "Ukončeno" && (
-              <button
-                onClick={handleDelete}
-                className="px-3 py-1.5 text-sm text-red-500 border border-red-200 rounded hover:bg-red-50"
-              >
-                Smazat
-              </button>
+              <>
+                <button
+                  onClick={handleUnarchive}
+                  className="px-3 py-1.5 text-sm text-green-600 border border-green-200 rounded hover:bg-green-50"
+                >
+                  Obnovit
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-3 py-1.5 text-sm text-red-500 border border-red-200 rounded hover:bg-red-50"
+                >
+                  Smazat
+                </button>
+              </>
             )}
           </div>
         </div>
