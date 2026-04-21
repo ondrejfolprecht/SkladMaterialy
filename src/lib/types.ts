@@ -61,20 +61,20 @@ export type MovementFormData = {
 };
 
 export const CATEGORIES = [
-  "Bro\u017eura",
-  "Let\u00e1k",
+  "Brožura",
+  "Leták",
   "Vizitka",
   "Katalog",
-  "Pou\u010den\u00ed",
-  "Ostatn\u00ed",
+  "Poučení",
+  "Ostatní",
 ] as const;
 
 export const MATERIAL_STATUSES = [
-  "Aktivn\u00ed",
-  "Ukon\u010deno",
+  "Aktivní",
+  "Ukončeno",
 ] as const;
 
 export const ORDER_STATUSES = [
   "V tisku",
-  "Naskladn\u011bno",
+  "Naskladněno",
 ] as const;

@@ -11,10 +11,10 @@ interface Props {
 }
 
 const ALERT_DOTS: Record<string, string> = {
-  red: "\uD83D\uDD34",
-  yellow: "\uD83D\uDFE1",
-  green: "\uD83D\uDFE2",
-  none: "\u2013",
+  red: "🔴",
+  yellow: "🟡",
+  green: "🟢",
+  none: "–",
 };
 
 export default function MaterialTable({
@@ -28,8 +28,8 @@ export default function MaterialTable({
     return (
       <div className="text-center text-gray-400 py-12">
         {isArchive
-          ? "\u017d\u00e1dn\u00e9 ukon\u010den\u00e9 materi\u00e1ly."
-          : "\u017d\u00e1dn\u00e9 aktivn\u00ed materi\u00e1ly. P\u0159idejte prvn\u00ed tiskovinu."}
+          ? "Žádné ukončené materiály."
+          : "Žádné aktivní materiály. Přidejte první tiskovinu."}
       </div>
     );
   }
@@ -39,11 +39,11 @@ export default function MaterialTable({
       <table className="w-full text-xs">
         <thead className="bg-gray-50 border-b">
           <tr>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">N\u00e1zev</th>
+            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Název</th>
             <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kat.</th>
             <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase">Sklad</th>
-            <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase">Spot\u0159eba/m\u011bs</th>
-            <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Z\u00e1soby na</th>
+            <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase">Spotřeba/měs</th>
+            <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Zásoby na</th>
             <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase">Stav obj.</th>
             <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase">Alert</th>
             <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase">Akce</th>
@@ -52,12 +52,12 @@ export default function MaterialTable({
         <tbody className="divide-y">
           {materials.map((mat) => {
             const latestOrder = mat.orders?.[0];
-            const orderStatus = latestOrder?.status || "\u2013";
+            const orderStatus = latestOrder?.status || "–";
 
             // Usage display
             const estimated = mat.estimatedMonthlyUsage;
             const real = mat.realMonthlyUsage;
-            let usageDisplay = "\u2013";
+            let usageDisplay = "–";
             if (estimated != null && real != null) {
               const diff = Math.abs(estimated - real) / Math.max(estimated, 1);
               if (diff > 0.2) {
@@ -83,7 +83,7 @@ export default function MaterialTable({
                     <span className="text-gray-300 ml-1" title={mat.note}>*</span>
                   )}
                 </td>
-                <td className="px-2 py-1.5 text-gray-500">{mat.category || "\u2013"}</td>
+                <td className="px-2 py-1.5 text-gray-500">{mat.category || "–"}</td>
                 <td className="px-2 py-1.5 text-right font-medium">
                   {mat.currentStock.toLocaleString("cs-CZ")}
                 </td>
@@ -94,7 +94,7 @@ export default function MaterialTable({
                     className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
                       orderStatus === "V tisku"
                         ? "bg-yellow-100 text-yellow-800"
-                        : orderStatus === "Naskladn\u011bno"
+                        : orderStatus === "Naskladněno"
                         ? "bg-green-100 text-green-800"
                         : "text-gray-400"
                     }`}
@@ -103,7 +103,7 @@ export default function MaterialTable({
                   </span>
                 </td>
                 <td className="px-2 py-1.5 text-center text-base">
-                  {ALERT_DOTS[mat.alertLevel] || "\u2013"}
+                  {ALERT_DOTS[mat.alertLevel] || "–"}
                 </td>
                 <td className="px-2 py-1.5 text-right whitespace-nowrap">
                   {!isArchive && (
@@ -116,7 +116,7 @@ export default function MaterialTable({
                         className="text-green-600 hover:underline mr-2"
                         disabled={mat.currentStock <= 0}
                       >
-                        P\u0159edat
+                        Předat
                       </button>
                       <button
                         onClick={(e) => {

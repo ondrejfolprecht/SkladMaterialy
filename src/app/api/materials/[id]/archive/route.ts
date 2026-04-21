@@ -16,7 +16,7 @@ export async function POST(
 
     const updated = await prisma.material.update({
       where: { id: Number(params.id) },
-      data: { status: "Ukon\u010deno" },
+      data: { status: "Ukončeno" },
     });
 
     return NextResponse.json(updated);

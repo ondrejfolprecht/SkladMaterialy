@@ -15,11 +15,11 @@ export async function POST(
     });
 
     if (!order)
-      return NextResponse.json({ error: "Objedn\u00e1vka nenalezena" }, { status: 404 });
+      return NextResponse.json({ error: "Objednávka nenalezena" }, { status: 404 });
 
-    if (order.status === "Naskladn\u011bno")
+    if (order.status === "Naskladněno")
       return NextResponse.json(
-        { error: "Objedn\u00e1vka ji\u017e byla naskladn\u011bna." },
+        { error: "Objednávka již byla naskladněna." },
         { status: 400 }
       );
 
@@ -37,18 +37,18 @@ export async function POST(
       data: {
         stockedAt,
         actualLeadDays,
-        status: "Naskladn\u011bno",
+        status: "Naskladněno",
       },
     });
 
     // Add quantity to material currentStock
     const material = await prisma.material.findUnique({
       where: { id: materialId },
-      include: { orders: { where: { status: "Naskladn\u011bno", actualLeadDays: { not: null } } } },
+      include: { orders: { where: { status: "Naskladněno", actualLeadDays: { not: null } } } },
     });
 
     if (!material)
-      return NextResponse.json({ error: "Materi\u00e1l nenalezen" }, { status: 404 });
+      return NextResponse.json({ error: "Materiál nenalezen" }, { status: 404 });
 
     // Compute new avg actual lead days including this order
     const allLeadDays = material.orders

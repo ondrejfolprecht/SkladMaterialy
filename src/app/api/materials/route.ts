@@ -42,12 +42,12 @@ function computeAlertFields(material: {
   }
 
   // Human readable days of stock
-  let daysOfStockText = "\u2013";
+  let daysOfStockText = "–";
   if (daysUntilEmpty !== null) {
-    if (daysUntilEmpty <= 0) daysOfStockText = "0 dn\u00ed";
-    else if (daysUntilEmpty <= 7) daysOfStockText = `~${Math.round(daysUntilEmpty)} dn\u00ed`;
-    else if (daysUntilEmpty <= 60) daysOfStockText = `~${Math.round(daysUntilEmpty / 7)} t\u00fddn\u016f`;
-    else if (daysUntilEmpty <= 365) daysOfStockText = `~${Math.round(daysUntilEmpty / 30)} m\u011bs\u00edc\u016f`;
+    if (daysUntilEmpty <= 0) daysOfStockText = "0 dní";
+    else if (daysUntilEmpty <= 7) daysOfStockText = `~${Math.round(daysUntilEmpty)} dní`;
+    else if (daysUntilEmpty <= 60) daysOfStockText = `~${Math.round(daysUntilEmpty / 7)} týdnů`;
+    else if (daysUntilEmpty <= 365) daysOfStockText = `~${Math.round(daysUntilEmpty / 30)} měsíců`;
     else daysOfStockText = `~${(daysUntilEmpty / 365).toFixed(1)} let`;
   }
 
@@ -70,9 +70,9 @@ export async function GET(req: NextRequest) {
     const where: Record<string, unknown> = {};
 
     if (statusFilter === "archived") {
-      where.status = "Ukon\u010deno";
+      where.status = "Ukončeno";
     } else {
-      where.status = { not: "Ukon\u010deno" };
+      where.status = { not: "Ukončeno" };
     }
 
     if (search) {
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("GET /api/materials error:", error);
     return NextResponse.json(
-      { error: "Chyba p\u0159i na\u010d\u00edt\u00e1n\u00ed dat." },
+      { error: "Chyba při načítání dat." },
       { status: 500 }
     );
   }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const errors: string[] = [];
-    if (!body.name?.trim()) errors.push("N\u00e1zev je povinn\u00fd.");
+    if (!body.name?.trim()) errors.push("Název je povinný.");
 
     if (errors.length > 0) {
       return NextResponse.json({ errors }, { status: 400 });
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("POST /api/materials error:", error);
     return NextResponse.json(
-      { error: "Chyba p\u0159i ukl\u00e1d\u00e1n\u00ed." },
+      { error: "Chyba při ukládání." },
       { status: 500 }
     );
   }

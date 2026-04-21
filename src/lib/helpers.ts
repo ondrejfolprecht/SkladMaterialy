@@ -1,5 +1,5 @@
 export function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "\u2013";
+  if (!dateStr) return "–";
   return new Date(dateStr).toLocaleDateString("cs-CZ");
 }
 
@@ -19,10 +19,10 @@ export function toInputDate(dateStr: string | null): string {
 }
 
 export function daysToHumanText(days: number | null): string {
-  if (days === null || days < 0) return "\u2013";
-  if (days === 0) return "0 dn\u00ed";
-  if (days <= 7) return `~${Math.round(days)} dn\u00ed`;
-  if (days <= 60) return `~${Math.round(days / 7)} t\u00fddn\u016f`;
-  if (days <= 365) return `~${Math.round(days / 30)} m\u011bs\u00edc\u016f`;
+  if (days === null || days < 0) return "–";
+  if (days === 0) return "0 dní";
+  if (days <= 7) return `~${Math.round(days)} dní`;
+  if (days <= 60) return `~${Math.round(days / 7)} týdnů`;
+  if (days <= 365) return `~${Math.round(days / 30)} měsíců`;
   return `~${(days / 365).toFixed(1)} let`;
 }

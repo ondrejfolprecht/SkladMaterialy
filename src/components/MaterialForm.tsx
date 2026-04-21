@@ -40,7 +40,7 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
     setErrors([]);
 
     const errs: string[] = [];
-    if (!form.name.trim()) errs.push("N\u00e1zev je povinn\u00fd.");
+    if (!form.name.trim()) errs.push("Název je povinný.");
 
     if (errs.length > 0) {
       setErrors(errs);
@@ -52,7 +52,7 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
       await onSave(form);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Nepoda\u0159ilo se ulo\u017eit.";
+        err instanceof Error ? err.message : "Nepodařilo se uložit.";
       setErrors([message]);
     } finally {
       setSaving(false);
@@ -70,7 +70,7 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
         className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto"
       >
         <h2 className="text-lg font-semibold mb-4">
-          {material ? "Upravit materi\u00e1l" : "Nov\u00fd materi\u00e1l"}
+          {material ? "Upravit materiál" : "Nový materiál"}
         </h2>
 
         {errors.length > 0 && (
@@ -83,7 +83,7 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
 
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-sm font-medium mb-1">N\u00e1zev *</label>
+            <label className="block text-sm font-medium mb-1">Název *</label>
             <input
               type="text"
               value={form.name}
@@ -100,7 +100,7 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
               onChange={(e) => set("category", e.target.value)}
               className="w-full border rounded px-3 py-2 text-sm"
             >
-              <option value="">\u2014 vyberte \u2014</option>
+              <option value="">— vyberte —</option>
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -121,7 +121,7 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              Odhadovan\u00e1 v\u00fdrobn\u00ed lh\u016fta (dn\u00ed)
+              Odhadovaná výrobní lhůta (dní)
             </label>
             <input
               type="number"
@@ -136,7 +136,7 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              Odhadovan\u00e1 m\u011bs\u00ed\u010dn\u00ed spot\u0159eba (ks)
+              Odhadovaná měsíční spotřeba (ks)
             </label>
             <input
               type="number"
@@ -150,7 +150,7 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
           </div>
 
           <div className="col-span-2">
-            <label className="block text-sm font-medium mb-1">Pozn\u00e1mka</label>
+            <label className="block text-sm font-medium mb-1">Poznámka</label>
             <textarea
               value={form.note}
               onChange={(e) => set("note", e.target.value)}
@@ -162,17 +162,17 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
 
         <div className="flex justify-between mt-6">
           <div>
-            {material && onArchive && material.status !== "Ukon\u010deno" && (
+            {material && onArchive && material.status !== "Ukončeno" && (
               <button
                 type="button"
                 onClick={() => {
-                  if (confirm(`Ukon\u010dit materi\u00e1l \u201e${material.name}\u201c?`)) {
+                  if (confirm(`Ukončit materiál „${material.name}“?`)) {
                     onArchive(material);
                   }
                 }}
                 className="px-4 py-2 text-sm text-red-500 border border-red-200 rounded hover:bg-red-50"
               >
-                Ukon\u010dit materi\u00e1l
+                Ukončit materiál
               </button>
             )}
           </div>
@@ -182,14 +182,14 @@ export default function MaterialForm({ material, onSave, onCancel, onArchive }: 
               onClick={onCancel}
               className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
             >
-              Zru\u0161it
+              Zrušit
             </button>
             <button
               type="submit"
               disabled={saving}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              {saving ? "Ukl\u00e1d\u00e1m\u2026" : "Ulo\u017eit"}
+              {saving ? "Ukládám…" : "Uložit"}
             </button>
           </div>
         </div>

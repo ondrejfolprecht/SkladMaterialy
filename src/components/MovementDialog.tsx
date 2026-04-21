@@ -27,8 +27,8 @@ export default function MovementDialog({
     setErrors([]);
 
     const errs: string[] = [];
-    if (!department.trim()) errs.push("Zadejte odd\u011blen\u00ed.");
-    if (quantity <= 0) errs.push("Mno\u017estv\u00ed mus\u00ed b\u00fdt kladn\u00e9.");
+    if (!department.trim()) errs.push("Zadejte oddělení.");
+    if (quantity <= 0) errs.push("Množství musí být kladné.");
     if (quantity > material.currentStock)
       errs.push(`Max. ${material.currentStock} ks.`);
 
@@ -46,7 +46,7 @@ export default function MovementDialog({
       await onConfirm(department.trim(), quantity);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Nepoda\u0159ilo se p\u0159edat.";
+        err instanceof Error ? err.message : "Nepodařilo se předat.";
       setErrors([message]);
       setConfirming(false);
     } finally {
@@ -57,9 +57,9 @@ export default function MovementDialog({
   return (
     <div className="fixed inset-0 bg-black/30 flex items-start justify-center pt-24 z-50">
       <div className="bg-white rounded-lg shadow-lg p-5 w-full max-w-sm">
-        <h3 className="text-base font-semibold mb-1">P\u0159edat materi\u00e1l</h3>
+        <h3 className="text-base font-semibold mb-1">Předat materiál</h3>
         <p className="text-sm text-gray-500 mb-4">
-          {material.name} \u2014 k dispozici {material.currentStock} ks
+          {material.name} — k dispozici {material.currentStock} ks
         </p>
 
         {errors.length > 0 && (
@@ -74,14 +74,14 @@ export default function MovementDialog({
           <form onSubmit={handleNext}>
             <div className="mb-3">
               <label className="block text-sm font-medium mb-1">
-                Odd\u011blen\u00ed *
+                Oddělení *
               </label>
               <input
                 type="text"
                 list="dept-suggestions"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                placeholder="nap\u0159. Recepce, PET/CT, Klientsk\u00fd servis\u2026"
+                placeholder="např. Recepce, PET/CT, Klientský servis…"
                 className="w-full border rounded px-3 py-2 text-sm"
                 autoFocus
               />
@@ -94,7 +94,7 @@ export default function MovementDialog({
 
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
-                Mno\u017estv\u00ed *
+                Množství *
               </label>
               <input
                 type="number"
@@ -112,30 +112,30 @@ export default function MovementDialog({
                 onClick={onCancel}
                 className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50"
               >
-                Zru\u0161it
+                Zrušit
               </button>
               <button
                 type="submit"
                 className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700"
               >
-                Pokra\u010dovat
+                Pokračovat
               </button>
             </div>
           </form>
         ) : (
           <div>
             <div className="bg-gray-50 border rounded p-3 mb-4 text-sm">
-              <div className="font-medium mb-2">Zkontrolujte \u00fadaje:</div>
+              <div className="font-medium mb-2">Zkontrolujte údaje:</div>
               <div>
-                <span className="text-gray-500">Odd\u011blen\u00ed:</span>{" "}
+                <span className="text-gray-500">Oddělení:</span>{" "}
                 <strong>{department}</strong>
               </div>
               <div>
-                <span className="text-gray-500">Mno\u017estv\u00ed:</span>{" "}
+                <span className="text-gray-500">Množství:</span>{" "}
                 <strong>{quantity} ks</strong>
               </div>
               <div className="mt-1 text-gray-500 text-xs">
-                Po p\u0159ed\u00e1n\u00ed z\u016fstane na sklad\u011b{" "}
+                Po předání zůstane na skladě{" "}
                 {material.currentStock - quantity} ks
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function MovementDialog({
                 onClick={() => setConfirming(false)}
                 className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50"
               >
-                Zp\u011bt
+                Zpět
               </button>
               <button
                 type="button"
@@ -154,7 +154,7 @@ export default function MovementDialog({
                 disabled={saving}
                 className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
               >
-                {saving ? "P\u0159ed\u00e1v\u00e1m\u2026" : "Potvrdit p\u0159ed\u00e1n\u00ed"}
+                {saving ? "Předávám…" : "Potvrdit předání"}
               </button>
             </div>
           </div>

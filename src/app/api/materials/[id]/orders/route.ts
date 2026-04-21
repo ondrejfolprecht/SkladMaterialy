@@ -12,7 +12,7 @@ export async function POST(
 
     const errors: string[] = [];
     if (!body.quantity || body.quantity <= 0)
-      errors.push("Mno\u017estv\u00ed mus\u00ed b\u00fdt kladn\u00e9 \u010d\u00edslo.");
+      errors.push("Množství musí být kladné číslo.");
 
     if (errors.length > 0) {
       return NextResponse.json({ errors }, { status: 400 });
@@ -23,7 +23,7 @@ export async function POST(
     });
 
     if (!material)
-      return NextResponse.json({ error: "Materi\u00e1l nenalezen" }, { status: 404 });
+      return NextResponse.json({ error: "Materiál nenalezen" }, { status: 404 });
 
     const order = await prisma.order.create({
       data: {

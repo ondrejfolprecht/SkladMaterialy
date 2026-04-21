@@ -11,9 +11,9 @@ export async function POST(
     const materialId = Number(params.id);
 
     const errors: string[] = [];
-    if (!body.department?.trim()) errors.push("Odd\u011blen\u00ed je povinn\u00e9.");
+    if (!body.department?.trim()) errors.push("Oddělení je povinné.");
     if (!body.quantity || body.quantity <= 0)
-      errors.push("Mno\u017estv\u00ed mus\u00ed b\u00fdt kladn\u00e9 \u010d\u00edslo.");
+      errors.push("Množství musí být kladné číslo.");
 
     if (errors.length > 0) {
       return NextResponse.json({ errors }, { status: 400 });
@@ -24,12 +24,12 @@ export async function POST(
     });
 
     if (!material)
-      return NextResponse.json({ error: "Materi\u00e1l nenalezen" }, { status: 404 });
+      return NextResponse.json({ error: "Materiál nenalezen" }, { status: 404 });
 
     const quantity = Number(body.quantity);
     if (quantity > material.currentStock) {
       return NextResponse.json(
-        { errors: [`Nelze p\u0159edat v\u00edce ne\u017e je na sklad\u011b (${material.currentStock} ks).`] },
+        { errors: [`Nelze předat více než je na skladě (${material.currentStock} ks).`] },
         { status: 400 }
       );
     }

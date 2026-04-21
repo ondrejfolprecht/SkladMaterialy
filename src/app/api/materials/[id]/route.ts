@@ -32,7 +32,7 @@ export async function PUT(
     const body = await req.json();
 
     const errors: string[] = [];
-    if (!body.name?.trim()) errors.push("N\u00e1zev je povinn\u00fd.");
+    if (!body.name?.trim()) errors.push("Název je povinný.");
 
     if (errors.length > 0) {
       return NextResponse.json({ errors }, { status: 400 });
@@ -54,7 +54,7 @@ export async function PUT(
     return NextResponse.json(material);
   } catch (error) {
     console.error("PUT /api/materials/[id] error:", error);
-    return NextResponse.json({ error: "Chyba p\u0159i ukl\u00e1d\u00e1n\u00ed." }, { status: 500 });
+    return NextResponse.json({ error: "Chyba při ukládání." }, { status: 500 });
   }
 }
 
@@ -68,6 +68,6 @@ export async function DELETE(
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("DELETE /api/materials/[id] error:", error);
-    return NextResponse.json({ error: "Chyba p\u0159i maz\u00e1n\u00ed." }, { status: 500 });
+    return NextResponse.json({ error: "Chyba při mazání." }, { status: 500 });
   }
 }
