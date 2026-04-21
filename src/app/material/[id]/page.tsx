@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Material, MaterialFormData } from "@/lib/types";
+import { Material, MaterialFormData, Movement } from "@/lib/types";
 import { formatDate } from "@/lib/helpers";
 import MaterialForm from "@/components/MaterialForm";
 import MovementDialog from "@/components/MovementDialog";
+import EditMovementDialog from "@/components/EditMovementDialog";
 import OrderDialog from "@/components/OrderDialog";
 
 export default function MaterialDetailPage() {
@@ -21,6 +22,7 @@ export default function MaterialDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showMovementDialog, setShowMovementDialog] = useState(false);
   const [showOrderDialog, setShowOrderDialog] = useState(false);
+  const [editingMovement, setEditingMovement] = useState<Movement | null>(null);
 
   const fetchMaterial = useCallback(async () => {
     setLoading(true);
@@ -117,6 +119,56 @@ export default function MaterialDetailPage() {
     }
 
     setShowOrderDialog(false);
+    fetchMaterial();
+  }
+
+  async function handleEditMovement(data: {
+    department: string;
+    quantity: number;
+    movedAt: string;
+  }) {
+    if (!editingMovement) return;
+
+    const res = await fetch(
+      `/api/materials/${id}/movements/${editingMovement.id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!res.ok) {
+      let message = "Chyba při úpravě pohybu.";
+      try {
+        const body = await res.json();
+        message = body.errors?.join(", ") || body.error || message;
+      } catch {}
+      throw new Error(message);
+    }
+
+    setEditingMovement(null);
+    fetchMaterial();
+  }
+
+  async function handleDeleteMovement(movement: Movement) {
+    if (
+      !confirm(
+        `Smazat pohyb „${movement.department}: ${movement.quantity} ks"? ` +
+          `Množství se vrátí zpět na sklad.`
+      )
+    )
+      return;
+
+    const res = await fetch(`/api/materials/${id}/movements/${movement.id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      alert("Nepodařilo se smazat pohyb.");
+      return;
+    }
+
     fetchMaterial();
   }
 
@@ -391,6 +443,9 @@ export default function MaterialDetailPage() {
                   <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
                     Množství
                   </th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                    Akce
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -400,6 +455,20 @@ export default function MaterialDetailPage() {
                     <td className="px-4 py-2 font-medium">{movement.department}</td>
                     <td className="px-4 py-2 text-right">
                       {movement.quantity.toLocaleString("cs-CZ")} ks
+                    </td>
+                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => setEditingMovement(movement)}
+                        className="text-blue-600 hover:underline text-xs mr-3"
+                      >
+                        Upravit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMovement(movement)}
+                        className="text-red-500 hover:underline text-xs"
+                      >
+                        Smazat
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -439,6 +508,17 @@ export default function MaterialDetailPage() {
           departments={knownDepartments}
           onConfirm={handleNewMovement}
           onCancel={() => setShowMovementDialog(false)}
+        />
+      )}
+
+      {/* Edit movement dialog */}
+      {editingMovement && (
+        <EditMovementDialog
+          material={material}
+          movement={editingMovement}
+          departments={knownDepartments}
+          onConfirm={handleEditMovement}
+          onCancel={() => setEditingMovement(null)}
         />
       )}
     </main>
