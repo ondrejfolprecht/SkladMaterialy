@@ -7,33 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Item {
-  id                      Int        @id @default(autoincrement())
-  name                    String
-  category                String     @default("")
-  orderedQuantity         Int        @map("ordered_quantity")
-  marketingQuantity       Int        @default(0) @map("marketing_quantity")
-  productionLeadTimeDays  Int?       @map("production_lead_time_days")
-  printOrderedAt          DateTime?  @map("print_ordered_at")
-  stockedAt               DateTime?  @map("stocked_at")
-  status                  String     @default("V tisku")
-  reorderFlag             Boolean    @default(false) @map("reorder_flag")
-  supplier                String     @default("")
-  note                    String     @default("")
-  createdAt               DateTime   @default(now()) @map("created_at")
-  updatedAt               DateTime   @updatedAt @map("updated_at")
-  transfers               Transfer[]
+model Material {
+  id                    Int        @id @default(autoincrement())
+  name                  String
+  category              String     @default("")
+  supplier              String     @default("")
+  estimatedLeadDays     Int?       @map("estimated_lead_days")
+  avgActualLeadDays     Float?     @map("avg_actual_lead_days")
+  estimatedMonthlyUsage Int?       @map("estimated_monthly_usage")
+  currentStock          Int        @default(0) @map("current_stock")
+  note                  String     @default("")
+  status                String     @default("Aktivn\u00ed")
+  createdAt             DateTime   @default(now()) @map("created_at")
+  updatedAt             DateTime   @updatedAt @map("updated_at")
+  orders                Order[]
+  movements             Movement[]
 
-  @@map("items")
+  @@map("materials")
 }
 
-model Transfer {
-  id            Int      @id @default(autoincrement())
-  itemId        Int      @map("item_id")
-  department    String
-  quantity      Int
-  transferredAt DateTime @default(now()) @map("transferred_at")
-  item          Item     @relation(fields: [itemId], references: [id])
+model Order {
+  id             Int       @id @default(autoincrement())
+  materialId     Int       @map("material_id")
+  quantity       Int
+  orderedAt      DateTime? @map("ordered_at")
+  stockedAt      DateTime? @map("stocked_at")
+  actualLeadDays Int?      @map("actual_lead_days")
+  status         String    @default("V tisku")
+  note           String    @default("")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  material       Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
-  @@map("transfers")
+  @@map("orders")
+}
+
+model Movement {
+  id         Int      @id @default(autoincrement())
+  materialId Int      @map("material_id")
+  department String
+  quantity   Int
+  movedAt    DateTime @default(now()) @map("moved_at")
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@map("movements")
 }

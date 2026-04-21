@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// POST /api/items/:id/archive — Ukončit položku
+// POST /api/materials/:id/archive
 export async function POST(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const item = await prisma.item.findUnique({
+    const material = await prisma.material.findUnique({
       where: { id: Number(params.id) },
     });
 
-    if (!item)
+    if (!material)
       return NextResponse.json({ error: "Nenalezeno" }, { status: 404 });
 
-    const updated = await prisma.item.update({
+    const updated = await prisma.material.update({
       where: { id: Number(params.id) },
-      data: { status: "Ukončeno" },
+      data: { status: "Ukon\u010deno" },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("POST /api/items/[id]/archive error:", error);
+    console.error("POST /api/materials/[id]/archive error:", error);
     return NextResponse.json({ error: "Chyba serveru." }, { status: 500 });
   }
 }

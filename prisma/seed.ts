@@ -3,56 +3,120 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Vyčistit vše
-  await prisma.transfer.deleteMany();
-  await prisma.item.deleteMany();
+  // Clear everything
+  await prisma.movement.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.material.deleteMany();
 
-  // Katalog A4 – skladem u marketingu, částečně předáno
-  const katalog = await prisma.item.create({
+  // 1. Katalog A4
+  const katalog = await prisma.material.create({
     data: {
       name: "Katalog A4",
       category: "Katalog",
-      orderedQuantity: 1000,
-      marketingQuantity: 200,
-      productionLeadTimeDays: 10,
-      printOrderedAt: new Date("2026-03-20"),
-      stockedAt: new Date("2026-03-28"),
-      status: "Skladem u marketingu",
-      supplier: "Tiskárna Havel",
-      note: "Standardní katalog pro recepci",
+      supplier: "Tisk\u00e1rna Havel",
+      estimatedLeadDays: 45,
+      avgActualLeadDays: 45,
+      estimatedMonthlyUsage: 50,
+      currentStock: 320,
+      note: "Standardn\u00ed katalog pro recepci",
     },
   });
 
-  await prisma.transfer.createMany({
+  await prisma.order.create({
+    data: {
+      materialId: katalog.id,
+      quantity: 1000,
+      orderedAt: new Date("2026-01-15"),
+      stockedAt: new Date("2026-03-01"),
+      actualLeadDays: 45,
+      status: "Naskladn\u011bno",
+    },
+  });
+
+  await prisma.movement.createMany({
     data: [
       {
-        itemId: katalog.id,
+        materialId: katalog.id,
         department: "Recepce",
-        quantity: 500,
-        transferredAt: new Date("2026-03-29"),
+        quantity: 400,
+        movedAt: new Date("2026-03-05"),
       },
       {
-        itemId: katalog.id,
-        department: "Klientský servis",
-        quantity: 300,
-        transferredAt: new Date("2026-04-02"),
+        materialId: katalog.id,
+        department: "Klientsk\u00fd servis",
+        quantity: 280,
+        movedAt: new Date("2026-03-20"),
       },
     ],
   });
 
-  // Brožura produktů – v tisku
-  await prisma.item.create({
+  // 2. Vizitky recepce
+  const vizitky = await prisma.material.create({
     data: {
-      name: "Brožura produktů",
-      category: "Brožura",
-      orderedQuantity: 500,
-      marketingQuantity: 0,
-      productionLeadTimeDays: 14,
-      printOrderedAt: new Date("2026-04-05"),
-      stockedAt: null,
-      status: "V tisku",
+      name: "Vizitky recepce",
+      category: "Vizitka",
+      supplier: "",
+      estimatedLeadDays: 3,
+      avgActualLeadDays: 2,
+      estimatedMonthlyUsage: 80,
+      currentStock: 15,
+    },
+  });
+
+  await prisma.order.create({
+    data: {
+      materialId: vizitky.id,
+      quantity: 500,
+      orderedAt: new Date("2026-02-01"),
+      stockedAt: new Date("2026-02-03"),
+      actualLeadDays: 2,
+      status: "Naskladn\u011bno",
+    },
+  });
+
+  await prisma.movement.createMany({
+    data: [
+      {
+        materialId: vizitky.id,
+        department: "Recepce",
+        quantity: 300,
+        movedAt: new Date("2026-02-10"),
+      },
+      {
+        materialId: vizitky.id,
+        department: "PET/CT",
+        quantity: 100,
+        movedAt: new Date("2026-03-01"),
+      },
+      {
+        materialId: vizitky.id,
+        department: "Dokto\u0159i",
+        quantity: 85,
+        movedAt: new Date("2026-03-15"),
+      },
+    ],
+  });
+
+  // 3. Bro\u017eura produkt\u016f (in print, 0 stock)
+  const brozura = await prisma.material.create({
+    data: {
+      name: "Bro\u017eura produkt\u016f",
+      category: "Bro\u017eura",
       supplier: "PrintExpress s.r.o.",
-      note: "Nový design Q2 2026",
+      estimatedLeadDays: 14,
+      estimatedMonthlyUsage: 30,
+      currentStock: 0,
+    },
+  });
+
+  await prisma.order.create({
+    data: {
+      materialId: brozura.id,
+      quantity: 500,
+      orderedAt: new Date("2026-04-05"),
+      stockedAt: null,
+      actualLeadDays: null,
+      status: "V tisku",
     },
   });
 
